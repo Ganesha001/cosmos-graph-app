@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmos DB Graph App</title>
+</head>
+<body>
+    <h1>Azure Cosmos DB Gremlin API Test</h1>
+    <button onclick="testConnection()">Test Connection</button>
+    <p id="result"></p>
+
+    <script>
+        function testConnection() {
+            fetch("/test_connection", { method: "POST" })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("result").innerText = data.message;
+                })
+                .catch(error => {
+                    document.getElementById("result").innerText = "Error: " + error;
+                });
+        }
+    </script>
+</body>
+</html>
