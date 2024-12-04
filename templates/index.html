@@ -3,23 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosmos DB Graph App</title>
+    <title>Cosmos DB Graph Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Azure Cosmos DB Gremlin API Test</h1>
-    <button onclick="testConnection()">Test Connection</button>
-    <p id="result"></p>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
+        <h1 class="text-2xl font-bold mb-6">Cosmos DB Graph Explorer</h1>
+
+        <div class="grid grid-cols-2 gap-6">
+            <!-- Vertex Creation Section -->
+            <div class="bg-blue-50 p-4 rounded">
+                <h2 class="text-xl font-semibold mb-4">Add Vertex</h2>
+                <input type="text" id="vertexLabel" placeholder="Vertex Label" class="w-full mb-2 p-2 border rounded">
+                <input type="text" id="vertexProperties" placeholder="Properties (JSON)" class="w-full mb-2 p-2 border rounded">
+                <button onclick="addVertex()" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Add Vertex</button>
+            </div>
+
+            <!-- Edge Creation Section -->
+            <div class="bg-green-50 p-4 rounded">
+                <h2 class="text-xl font-semibold mb-4">Add Edge</h2>
+                <input type="text" id="fromVertex" placeholder="From Vertex ID" class="w-full mb-2 p-2 border rounded">
+                <input type="text" id="toVertex" placeholder="To Vertex ID" class="w-full mb-2 p-2 border rounded">
+                <input type="text" id="edgeLabel" placeholder="Edge Label" class="w-full mb-2 p-2 border rounded">
+                <input type="text" id="edgeProperties" placeholder="Properties (JSON)" class="w-full mb-2 p-2 border rounded">
+                <button onclick="addEdge()" class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600">Add Edge</button>
+            </div>
+        </div>
+
+        <!-- Connection Test and Results -->
+        <div class="mt-6">
+            <button onclick="testConnection()" class="bg-purple-500 text-white p-2 rounded hover:bg-purple-600">Test Connection</button>
+            <p id="connectionResult" class="mt-2"></p>
+        </div>
+
+        <!-- Vertices and Edges Display -->
+        <div class="mt-6 grid grid-cols-2 gap-6">
+            <div>
+                <h2 class="text-xl font-semibold mb-4">Vertices</h2>
+                <button onclick="loadVertices()" class="bg-orange-500 text-white p-2 rounded hover:bg-orange-600 mb-2">Load Vertices</button>
+                <pre id="verticesDisplay" class="bg-gray-100 p-2 rounded max-h-64 overflow-auto"></pre>
+            </div>
+            <div>
+                <h2 class="text-xl font-semibold mb-4">Edges</h2>
+                <button onclick="loadEdges()" class="bg-teal-500 text-white p-2 rounded hover:bg-teal-600 mb-2">Load Edges</button>
+                <pre id="edgesDisplay" class="bg-gray-100 p-2 rounded max-h-64 overflow-auto"></pre>
+            </div>
+        </div>
+    </div>
 
     <script>
         function testConnection() {
             fetch("/test_connection", { method: "POST" })
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById("result").innerText = data.message;
+                    document.getElementById("connectionResult").innerText = data.message;
                 })
                 .catch(error => {
-                    document.getElementById("result").innerText = "Error: " + error;
+                    document.getElementById("connectionResult").innerText = "Error: " + error;
                 });
+        }
+
+        function addVertex() {
+            const label = document.getElementById("vertexLabel").value;
+            const propertiesStr = document.getElementById("vertexProperties").value;
+            
+            let properties = {};
+            try {
+                properties = propertiesStr ? JSON.parse(propertiesStr) : {};
+            } catch (e) {
+                alert("Invalid JSON for properties");
+                return;
+            }
+
+            fetch("/add_vertex", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ label, properties })
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message))
+            .catch(error => alert("Error: " + error));
+        }
+
+        function addEdge() {
+            const fromVertex = document.getElementById("fromVertex").value;
+            const toVertex = document.getElementById("toVertex").value;
+            const edgeLabel = document.getElementById("edgeLabel").value;
+            const propertiesStr = document.getElementById("edgeProperties").value;
+            
+            let properties = {};
+            try {
+                properties = propertiesStr ? JSON.parse(propertiesStr) : {};
+            } catch (e) {
+                alert("Invalid JSON for properties");
+                return;
+            }
+
+            fetch("/add_edge", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ from_vertex: fromVertex, to_vertex: toVertex, edge_label: edgeLabel, properties })
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message))
+            .catch(error => alert("Error: " + error));
+        }
+
+        function loadVertices() {
+            fetch("/get_vertices")
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("verticesDisplay").innerText = JSON.stringify(data.vertices, null, 2);
+                })
+                .catch(error => alert("Error: " + error));
+        }
+
+        function loadEdges() {
+            fetch("/get_edges")
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("edgesDisplay").innerText = JSON.stringify(data.edges, null, 2);
+                })
+                .catch(error => alert("Error: " + error));
         }
     </script>
 </body>
